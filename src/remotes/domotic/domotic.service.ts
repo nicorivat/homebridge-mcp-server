@@ -3,8 +3,8 @@ import z from 'zod';
 import { DomoticFacade } from '../../business/facades';
 import { AccessoryDTO } from '../../main/dto';
 import { AccessoryTypes, LightStatuses } from '../../main/enums';
-import { DomoticHttpService } from './domotic-http.service';
 import { HomeBridgeLight } from './models';
+import { DomoticHttpService } from './services';
 
 @Injectable()
 export class DomoticService implements DomoticFacade {
@@ -53,6 +53,27 @@ export class DomoticService implements DomoticFacade {
       console.error(e);
       throw new HttpException(
         'Erreur lors de la mise à jour de la lumière',
+        e.status || 500,
+      );
+    }
+  }
+
+  async updateLightBrightness(
+    id: string,
+    brightness: number,
+  ): Promise<AccessoryDTO> {
+    try {
+      await this.httpService.axiosRef.put(`/accessories/${id}`, {
+        characteristicType: 'Brightness',
+        value: brightness,
+      });
+
+      const lights = await this.getAllLights();
+      return lights.find((l) => l.id === id)!;
+    } catch (e: any) {
+      console.error(e);
+      throw new HttpException(
+        'Erreur lors de la mise à jour de la luminosité de la lumière',
         e.status || 500,
       );
     }

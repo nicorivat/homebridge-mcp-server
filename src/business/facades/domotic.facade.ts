@@ -8,8 +8,8 @@ export abstract class DomoticFacade {
     id: string,
     status: z.infer<typeof LightStatuses>,
   ): Promise<AccessoryDTO>;
-  // abstract updateLightBrightness(
-  //   id: string,
-  //   brightness: number,
-  // ): Promise<AccessoryDTO>;
+  abstract updateLightBrightness(
+    id: string,
+    brightness: number,
+  ): Promise<AccessoryDTO>;
 }

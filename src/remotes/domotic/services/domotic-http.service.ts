@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
-import { DomoticAuthInterceptor } from './interceptors';
+import { DomoticAuthInterceptor } from '../interceptors';
 
 @Injectable()
 export class DomoticHttpService {

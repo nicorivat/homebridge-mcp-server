@@ -3,6 +3,7 @@ import { Tool } from '@rekog/mcp-nest';
 import z from 'zod';
 import {
   GetAllLightsUseCase,
+  UpdateLightBrightnessUseCase,
   UpdateLightStatusUseCase,
 } from '../../../business/use-cases';
 import { AccessoryDTO } from '../../dto';
@@ -13,6 +14,7 @@ export class LightsTools {
   constructor(
     private readonly getAllLightsUseCase: GetAllLightsUseCase,
     private readonly updateLightStatusUseCase: UpdateLightStatusUseCase,
+    private readonly updateLightBrightnessUseCase: UpdateLightBrightnessUseCase,
   ) {}
 
   @Tool({
@@ -20,9 +22,7 @@ export class LightsTools {
     description: 'Get all lights informations',
   })
   async getAllLights(): Promise<AccessoryDTO[]> {
-    const response = await this.getAllLightsUseCase.execute();
-    console.log('getAllLights', response);
-    return response;
+    return await this.getAllLightsUseCase.execute();
   }
 
   @Tool({
@@ -40,11 +40,29 @@ export class LightsTools {
     lightId: string;
     status: z.infer<typeof LightStatuses>;
   }): Promise<AccessoryDTO> {
-    const response = await this.updateLightStatusUseCase.execute(
-      lightId,
-      status,
-    );
-    console.log('updateLightStatus', response);
-    return response;
+    return await this.updateLightStatusUseCase.execute(lightId, status);
+  }
+
+  @Tool({
+    name: 'update_light_brightness',
+    description:
+      'Change light brightness. Can ONLY work if light has a brightness not undefined',
+    parameters: z.object({
+      lightId: z.string().describe('The ID of the light'),
+      brightness: z
+        .number()
+        .gte(0)
+        .lte(100)
+        .describe('The target brightness of the light'),
+    }),
+  })
+  async updateLightBrightness({
+    lightId,
+    brightness,
+  }: {
+    lightId: string;
+    brightness: number;
+  }): Promise<AccessoryDTO> {
+    return await this.updateLightBrightnessUseCase.execute(lightId, brightness);
   }
 }
