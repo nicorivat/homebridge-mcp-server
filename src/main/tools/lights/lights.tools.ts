@@ -20,7 +20,9 @@ export class LightsTools {
     description: 'Get all lights informations',
   })
   async getAllLights(): Promise<AccessoryDTO[]> {
-    return this.getAllLightsUseCase.execute();
+    const response = await this.getAllLightsUseCase.execute();
+    console.log('getAllLights', response);
+    return response;
   }
 
   @Tool({
@@ -38,6 +40,11 @@ export class LightsTools {
     lightId: string;
     status: z.infer<typeof LightStatuses>;
   }): Promise<AccessoryDTO> {
-    return this.updateLightStatusUseCase.execute(lightId, status);
+    const response = await this.updateLightStatusUseCase.execute(
+      lightId,
+      status,
+    );
+    console.log('updateLightStatus', response);
+    return response;
   }
 }
