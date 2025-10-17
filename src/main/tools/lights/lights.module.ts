@@ -4,6 +4,7 @@ import {
   UpdateLightBrightnessUseCaseModule,
   UpdateLightStatusUseCaseModule,
 } from '../../../business/use-cases';
+import { SchedulerModule } from '../../services';
 import { LightsTools } from './lights.tools';
 
 @Module({
@@ -11,6 +12,7 @@ import { LightsTools } from './lights.tools';
     GetAllLightsUseCaseModule,
     UpdateLightStatusUseCaseModule,
     UpdateLightBrightnessUseCaseModule,
+    SchedulerModule,
   ],
   providers: [LightsTools],
   exports: [LightsTools],

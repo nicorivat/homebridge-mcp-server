@@ -8,6 +8,7 @@ import {
 } from '../../../business/use-cases';
 import { AccessoryDTO } from '../../dto';
 import { LightStatuses } from '../../enums';
+import { SchedulerService } from '../../services';
 
 @Injectable()
 export class LightsTools {
@@ -15,6 +16,7 @@ export class LightsTools {
     private readonly getAllLightsUseCase: GetAllLightsUseCase,
     private readonly updateLightStatusUseCase: UpdateLightStatusUseCase,
     private readonly updateLightBrightnessUseCase: UpdateLightBrightnessUseCase,
+    private readonly schedulerService: SchedulerService,
   ) {}
 
   @Tool({
@@ -26,21 +28,56 @@ export class LightsTools {
   }
 
   @Tool({
-    name: 'update_light_status',
-    description: 'Change light status',
+    name: 'update_lights_status',
+    description: 'Change lights status',
     parameters: z.object({
-      lightId: z.string().describe('The ID of the light'),
-      status: LightStatuses.describe('The target status of the light'),
+      lightIds: z.string().array().describe('The IDs of the lights'),
+      status: LightStatuses.describe('The target status of the lights'),
     }),
   })
   async updateLightStatus({
-    lightId,
+    lightIds,
     status,
   }: {
-    lightId: string;
+    lightIds: string[];
     status: z.infer<typeof LightStatuses>;
-  }): Promise<AccessoryDTO> {
-    return await this.updateLightStatusUseCase.execute(lightId, status);
+  }): Promise<AccessoryDTO[]> {
+    return await Promise.all(
+      lightIds.map((lightId) =>
+        this.updateLightStatusUseCase.execute(lightId, status),
+      ),
+    );
+  }
+
+  @Tool({
+    name: 'schedule_lights_status',
+    description: 'schedule lights status',
+    parameters: z.object({
+      lightIds: z.string().array().describe('The IDs of the lights'),
+      status: LightStatuses.describe('The target status of the lights'),
+      when: z
+        .string()
+        .describe(
+          "Either an ISO 8601 date/time or a relative expression such as 'in 5 minutes', 'in 2 hours', or 'tomorrow at 9am'.",
+        ),
+    }),
+  })
+  sheduleLightStatus({
+    lightIds,
+    status,
+    when,
+  }: {
+    lightIds: string[];
+    status: z.infer<typeof LightStatuses>;
+    when: string;
+  }): string {
+    const result = this.schedulerService.scheduleTask(
+      when,
+       () => this.updateLightStatus({ lightIds, status }),
+    );
+    return result
+      ? 'Task successfully scheduled'
+      : 'An error occured during the task scheduling';
   }
 
   @Tool({
