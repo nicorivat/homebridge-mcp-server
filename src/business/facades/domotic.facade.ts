@@ -1,20 +1,19 @@
-import z from 'zod';
-import { AccessoryDTO } from '../../main/dto';
-import { LightStatuses } from './../../main/enums';
+import {
+  CurtainAttributesDTO,
+  CurtainDTO,
+  LightAttributesDTO,
+  LightDTO,
+} from '../../main/dto';
 
 export abstract class DomoticFacade {
-  abstract getAllLights(): Promise<AccessoryDTO[]>;
-  abstract updateLightStatus(
+  abstract getAllLights(): Promise<LightDTO[]>;
+  abstract updateLight(
     id: string,
-    status: z.infer<typeof LightStatuses>,
-  ): Promise<AccessoryDTO>;
-  abstract updateLightBrightness(
+    config: Partial<LightAttributesDTO>,
+  ): Promise<LightDTO | undefined>;
+  abstract getAllCurtains(): Promise<CurtainDTO[]>;
+  abstract updateCurtain(
     id: string,
-    brightness: number,
-  ): Promise<AccessoryDTO>;
-  abstract updateLightColor(
-    id: string,
-    hue: number,
-    saturation: number,
-  ): Promise<AccessoryDTO>;
+    config: Partial<CurtainAttributesDTO>,
+  ): Promise<CurtainDTO | undefined>;
 }

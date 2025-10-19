@@ -1,4 +1,5 @@
 import z from 'zod';
+import { baseHomebridgeAccessorySchema } from './base-homebridge-accessory.interface';
 
 const homebridgeLightValuesSchema = z.object({
   Brightness: z.number(),
@@ -7,11 +8,12 @@ const homebridgeLightValuesSchema = z.object({
   On: z.union([z.literal(0), z.literal(1)]),
 });
 
-export const homebridgeLightSchema = z.object({
-  uniqueId: z.string(),
-  serviceName: z.string(),
+export const homebridgeLightSchema = baseHomebridgeAccessorySchema.extend({
   type: z.literal('Lightbulb'),
   values: homebridgeLightValuesSchema,
 });
 
+export type HomeBridgeLightAttributes = z.infer<
+  typeof homebridgeLightValuesSchema
+>;
 export type HomeBridgeLight = z.infer<typeof homebridgeLightSchema>;

@@ -1,12 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { LightDTO } from '../../../../main/dto';
+import { CurtainDTO } from '../../../../main/dto';
 import { DomoticFacade } from '../../../facades';
 
 @Injectable()
-export class GetAllLightsUseCase {
+export class GetAllCurtainsUseCase {
   constructor(@Inject(DomoticFacade) private readonly domotic: DomoticFacade) {}
 
-  async execute(): Promise<LightDTO[]> {
-    return this.domotic.getAllLights();
+  execute(): Promise<CurtainDTO[]> {
+    return this.domotic.getAllCurtains();
   }
 }

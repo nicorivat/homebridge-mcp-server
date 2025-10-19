@@ -1,16 +1,26 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import z from 'zod';
 import { DomoticFacade } from '../../business/facades';
-import { AccessoryDTO } from '../../main/dto';
+import {
+  CurtainAttributesDTO,
+  CurtainDTO,
+  LightAttributesDTO,
+  LightDTO,
+} from '../../main/dto';
 import { AccessoryTypes, LightStatuses } from '../../main/enums';
-import { HomeBridgeLight } from './models';
+import {
+  HomeBridgeAccessory,
+  HomeBridgeCurtain,
+  HomeBridgeCurtainAttributes,
+  HomeBridgeLight,
+  HomeBridgeLightAttributes,
+} from './models';
 import { DomoticHttpService } from './services';
 
 @Injectable()
 export class DomoticService implements DomoticFacade {
   constructor(private readonly httpService: DomoticHttpService) {}
 
-  private parseLight(light: HomeBridgeLight): AccessoryDTO {
+  private parseLight(light: HomeBridgeLight): LightDTO {
     return {
       id: light.uniqueId,
       name: light.serviceName,
@@ -23,11 +33,75 @@ export class DomoticService implements DomoticFacade {
     };
   }
 
-  async getAllLights(): Promise<AccessoryDTO[]> {
+  private parseCurtain(curtain: HomeBridgeCurtain): CurtainDTO {
+    return {
+      id: curtain.uniqueId,
+      name: curtain.serviceName,
+      type: AccessoryTypes.Enum.CURTAIN,
+      currentPosition: curtain.values.CurrentPosition,
+      targetPosition: curtain.values.TargetPosition,
+    };
+  }
+
+  private async getAccessories(): Promise<HomeBridgeAccessory[]> {
     try {
       const { data } =
-        await this.httpService.axiosRef.get<HomeBridgeLight[]>('/accessories');
-      return data
+        await this.httpService.axiosRef.get<HomeBridgeAccessory[]>(
+          '/accessories',
+        );
+      return data;
+    } catch (e: any) {
+      console.error(e);
+      throw new HttpException(
+        'Erreur lors de la récupération des accessoires',
+        e.status || 500,
+      );
+    }
+  }
+
+  private async getAccessory(id: string): Promise<HomeBridgeAccessory> {
+    try {
+      const { data } = await this.httpService.axiosRef.get<HomeBridgeAccessory>(
+        `/accessories/${id}`,
+      );
+      return data;
+    } catch (e: any) {
+      console.error(e);
+      throw new HttpException(
+        "Erreur lors de la récupération de l'accessoire",
+        e.status || 500,
+      );
+    }
+  }
+
+  private lightAttributesToHomebridgeAttributes(
+    light: Partial<LightAttributesDTO>,
+  ): Partial<HomeBridgeLightAttributes> {
+    return {
+      On: light.status
+        ? light.status === LightStatuses.Enum.ON
+          ? 1
+          : 0
+        : undefined,
+      Brightness: light.brightness ?? undefined,
+      Hue: light.hue ?? undefined,
+      Saturation: light.saturation ?? undefined,
+    };
+  }
+
+  private curtainAttributesToHomebridgeAttributes(
+    curtain: Partial<CurtainAttributesDTO>,
+  ): Partial<HomeBridgeCurtainAttributes> {
+    return {
+      CurrentPosition: undefined,
+      TargetPosition: curtain.targetPosition ?? undefined,
+    };
+  }
+
+  async getAllLights(): Promise<LightDTO[]> {
+    try {
+      const accessories = await this.getAccessories();
+      return accessories
         .filter((a) => a.type === 'Lightbulb')
         .map((a) => this.parseLight(a));
     } catch (e: any) {
@@ -39,18 +113,29 @@ export class DomoticService implements DomoticFacade {
     }
   }
 
-  async updateLightStatus(
+  async updateLight(
     id: string,
-    status: z.infer<typeof LightStatuses>,
-  ): Promise<AccessoryDTO> {
+    config: Partial<LightAttributesDTO>,
+  ): Promise<LightDTO | undefined> {
     try {
-      await this.httpService.axiosRef.put(`/accessories/${id}`, {
-        characteristicType: 'On',
-        value: status === LightStatuses.Enum.ON ? 1 : 0,
-      });
-
-      const lights = await this.getAllLights();
-      return lights.find((l) => l.id === id)!;
+      const light = await this.getAccessory(id);
+      const transformedConfig =
+        this.lightAttributesToHomebridgeAttributes(config);
+      const requestedAttributes = Object.keys(transformedConfig).filter(
+        (key) => transformedConfig[key] !== undefined,
+      );
+      for (const requestedAttribute of requestedAttributes) {
+        if (
+          light.values[requestedAttribute] !==
+          transformedConfig[requestedAttribute]
+        ) {
+          await this.httpService.axiosRef.put(`/accessories/${id}`, {
+            characteristicType: requestedAttribute,
+            value: transformedConfig[requestedAttribute],
+          });
+        }
+      }
+      return this.parseLight((await this.getAccessory(id)) as HomeBridgeLight);
     } catch (e: any) {
       console.error(e);
       throw new HttpException(
@@ -60,48 +145,50 @@ export class DomoticService implements DomoticFacade {
     }
   }
 
-  async updateLightBrightness(
-    id: string,
-    brightness: number,
-  ): Promise<AccessoryDTO> {
+  async getAllCurtains(): Promise<CurtainDTO[]> {
     try {
-      await this.httpService.axiosRef.put(`/accessories/${id}`, {
-        characteristicType: 'Brightness',
-        value: brightness,
-      });
-
-      const lights = await this.getAllLights();
-      return lights.find((l) => l.id === id)!;
+      const accessories = await this.getAccessories();
+      return accessories
+        .filter((a) => a.type === 'WindowCovering')
+        .map((a) => this.parseCurtain(a));
     } catch (e: any) {
       console.error(e);
       throw new HttpException(
-        'Erreur lors de la mise à jour de la luminosité de la lumière',
+        'Erreur lors de la récupération des volets',
         e.status || 500,
       );
     }
   }
 
-  async updateLightColor(
+  async updateCurtain(
     id: string,
-    hue: number,
-    saturation: number,
-  ): Promise<AccessoryDTO> {
+    config: Partial<CurtainAttributesDTO>,
+  ): Promise<CurtainDTO | undefined> {
     try {
-      await this.httpService.axiosRef.put(`/accessories/${id}`, {
-        characteristicType: 'Hue',
-        value: hue,
-      });
-      await this.httpService.axiosRef.put(`/accessories/${id}`, {
-        characteristicType: 'Saturation',
-        value: saturation,
-      });
-
-      const lights = await this.getAllLights();
-      return lights.find((l) => l.id === id)!;
+      const light = await this.getAccessory(id);
+      const transformedConfig =
+        this.curtainAttributesToHomebridgeAttributes(config);
+      const requestedAttributes = Object.keys(transformedConfig).filter(
+        (key) => transformedConfig[key] !== undefined,
+      );
+      for (const requestedAttribute of requestedAttributes) {
+        if (
+          light.values[requestedAttribute] !==
+          transformedConfig[requestedAttribute]
+        ) {
+          await this.httpService.axiosRef.put(`/accessories/${id}`, {
+            characteristicType: requestedAttribute,
+            value: transformedConfig[requestedAttribute],
+          });
+        }
+      }
+      return this.parseCurtain(
+        (await this.getAccessory(id)) as HomeBridgeCurtain,
+      );
     } catch (e: any) {
       console.error(e);
       throw new HttpException(
-        'Erreur lors de la mise à jour de la luminosité de la lumière',
+        'Erreur lors de la mise à jour de la lumière',
         e.status || 500,
       );
     }

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { McpModule } from '@rekog/mcp-nest';
-import { LightsToolsModule } from './tools';
+import { CurtainsToolsModule, LightsToolsModule } from './tools';
 
 @Module({
   imports: [
@@ -11,6 +11,7 @@ import { LightsToolsModule } from './tools';
       version: '1.0.0',
     }),
     LightsToolsModule,
+    CurtainsToolsModule,
   ],
 })
 export class AppModule {}
