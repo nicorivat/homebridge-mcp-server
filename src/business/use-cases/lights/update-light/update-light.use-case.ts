@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { AccessoryDTO, LightAttributesDTO } from '../../../../main/dto';
+import { LightAttributesDTO, LightDTO } from '../../../../main/dto';
 import { DomoticFacade } from '../../../facades';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class UpdateLightUseCase {
   execute(
     id: string,
     config: Partial<LightAttributesDTO>,
-  ): Promise<AccessoryDTO | undefined> {
+  ): Promise<LightDTO | undefined> {
     return this.domoticService.updateLight(id, config);
   }
 }

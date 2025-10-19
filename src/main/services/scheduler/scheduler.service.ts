@@ -35,7 +35,7 @@ export class SchedulerService {
     }
   }
 
-  parseWhen(when: string): Date | null {
+  private parseWhen(when: string): Date | null {
     if (!when) return null;
 
     const now = dayjs();
