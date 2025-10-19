@@ -2,7 +2,6 @@ import z from 'zod';
 
 const homebridgeLightValuesSchema = z.object({
   Brightness: z.number(),
-  ColorTemperature: z.number(),
   Hue: z.number(),
   Saturation: z.number(),
   On: z.union([z.literal(0), z.literal(1)]),

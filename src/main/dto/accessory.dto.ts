@@ -11,6 +11,8 @@ const lightSchema = baseAccessorySchema.extend({
   type: z.literal(AccessoryTypes.Enum.LIGHT),
   status: LightStatuses,
   brightness: z.number().gte(0).gte(100),
+  hue: z.number().min(0).max(360),
+  saturation: z.number().min(0).max(100),
 });
 
 // const curtainSchema = baseAccessorySchema.extend({

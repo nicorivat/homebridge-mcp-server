@@ -62,12 +62,12 @@ export class SchedulerService {
     return null;
   }
 
-  scheduleTask(date: string, task: () => Promise<unknown>): boolean {
+  scheduleTask(date: string, task: () => Promise<unknown>): string {
     const parsedDate = this.parseWhen(date);
     if (parsedDate) {
       this.scheduledTasks.push({ date: parsedDate, task });
-      return true;
+      return 'Task successfully scheduled';
     }
-    return false;
+    return 'An error occured during the task scheduling';
   }
 }

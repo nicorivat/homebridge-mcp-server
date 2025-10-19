@@ -12,4 +12,9 @@ export abstract class DomoticFacade {
     id: string,
     brightness: number,
   ): Promise<AccessoryDTO>;
+  abstract updateLightColor(
+    id: string,
+    hue: number,
+    saturation: number,
+  ): Promise<AccessoryDTO>;
 }

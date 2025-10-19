@@ -16,6 +16,8 @@ export class DomoticService implements DomoticFacade {
       name: light.serviceName,
       type: AccessoryTypes.Enum.LIGHT,
       brightness: light.values.Brightness,
+      hue: light.values.Hue,
+      saturation: light.values.Saturation,
       status:
         light.values.On === 1 ? LightStatuses.Enum.ON : LightStatuses.Enum.OFF,
     };
@@ -66,6 +68,32 @@ export class DomoticService implements DomoticFacade {
       await this.httpService.axiosRef.put(`/accessories/${id}`, {
         characteristicType: 'Brightness',
         value: brightness,
+      });
+
+      const lights = await this.getAllLights();
+      return lights.find((l) => l.id === id)!;
+    } catch (e: any) {
+      console.error(e);
+      throw new HttpException(
+        'Erreur lors de la mise à jour de la luminosité de la lumière',
+        e.status || 500,
+      );
+    }
+  }
+
+  async updateLightColor(
+    id: string,
+    hue: number,
+    saturation: number,
+  ): Promise<AccessoryDTO> {
+    try {
+      await this.httpService.axiosRef.put(`/accessories/${id}`, {
+        characteristicType: 'Hue',
+        value: hue,
+      });
+      await this.httpService.axiosRef.put(`/accessories/${id}`, {
+        characteristicType: 'Saturation',
+        value: saturation,
       });
 
       const lights = await this.getAllLights();
