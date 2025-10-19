@@ -4,6 +4,7 @@ import {
   UpdateLightBrightnessUseCaseModule,
   UpdateLightColorUseCaseModule,
   UpdateLightStatusUseCaseModule,
+  UpdateLightUseCaseModule,
 } from '../../../business/use-cases';
 import { SchedulerModule } from '../../services';
 import { LightsTools } from './lights.tools';
@@ -14,6 +15,7 @@ import { LightsTools } from './lights.tools';
     UpdateLightStatusUseCaseModule,
     UpdateLightBrightnessUseCaseModule,
     UpdateLightColorUseCaseModule,
+    UpdateLightUseCaseModule,
     SchedulerModule,
   ],
   providers: [LightsTools],

@@ -1,9 +1,9 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import z from 'zod';
 import { DomoticFacade } from '../../business/facades';
-import { AccessoryDTO } from '../../main/dto';
+import { AccessoryDTO, LightAttributesDTO } from '../../main/dto';
 import { AccessoryTypes, LightStatuses } from '../../main/enums';
-import { HomeBridgeLight } from './models';
+import { HomeBridgeLight, HomeBridgeLightAttributes } from './models';
 import { DomoticHttpService } from './services';
 
 @Injectable()
@@ -34,6 +34,68 @@ export class DomoticService implements DomoticFacade {
       console.error(e);
       throw new HttpException(
         'Erreur lors de la récupération des lumières',
+        e.status || 500,
+      );
+    }
+  }
+
+  private async getAccessory(id: string): Promise<HomeBridgeLight> {
+    try {
+      const { data } = await this.httpService.axiosRef.get<HomeBridgeLight>(
+        `/accessories/${id}`,
+      );
+      return data;
+    } catch (e: any) {
+      console.error(e);
+      throw new HttpException(
+        "Erreur lors de la récupération de l'accessoire",
+        e.status || 500,
+      );
+    }
+  }
+
+  private lightAttributesToHomebridgeAttributes(
+    light: Partial<LightAttributesDTO>,
+  ): Partial<HomeBridgeLightAttributes> {
+    return {
+      On: light.status
+        ? light.status === LightStatuses.Enum.ON
+          ? 1
+          : 0
+        : undefined,
+      Brightness: light.brightness ?? undefined,
+      Hue: light.hue ?? undefined,
+      Saturation: light.saturation ?? undefined,
+    };
+  }
+
+  async updateLight(
+    id: string,
+    config: Partial<LightAttributesDTO>,
+  ): Promise<AccessoryDTO | undefined> {
+    try {
+      const light = await this.getAccessory(id);
+      const transformedConfig =
+        this.lightAttributesToHomebridgeAttributes(config);
+      const requestedAttributes = Object.keys(transformedConfig).filter(
+        (key) => transformedConfig[key] !== undefined,
+      );
+      for (const requestedAttribute of requestedAttributes) {
+        if (
+          light.values[requestedAttribute] !==
+          transformedConfig[requestedAttribute]
+        ) {
+          await this.httpService.axiosRef.put(`/accessories/${id}`, {
+            characteristicType: requestedAttribute,
+            value: transformedConfig[requestedAttribute],
+          });
+        }
+      }
+      return this.parseLight(await this.getAccessory(id));
+    } catch (e: any) {
+      console.error(e);
+      throw new HttpException(
+        'Erreur lors de la mise à jour de la lumière',
         e.status || 500,
       );
     }

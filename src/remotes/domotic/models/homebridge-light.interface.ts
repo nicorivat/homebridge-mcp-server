@@ -14,4 +14,5 @@ export const homebridgeLightSchema = z.object({
   values: homebridgeLightValuesSchema,
 });
 
+export type HomeBridgeLightAttributes = z.infer<typeof homebridgeLightValuesSchema>;
 export type HomeBridgeLight = z.infer<typeof homebridgeLightSchema>;

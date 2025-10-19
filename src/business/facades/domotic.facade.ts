@@ -1,5 +1,5 @@
 import z from 'zod';
-import { AccessoryDTO } from '../../main/dto';
+import { AccessoryDTO, LightAttributesDTO } from '../../main/dto';
 import { LightStatuses } from './../../main/enums';
 
 export abstract class DomoticFacade {
@@ -17,4 +17,8 @@ export abstract class DomoticFacade {
     hue: number,
     saturation: number,
   ): Promise<AccessoryDTO>;
+  abstract updateLight(
+    id: string,
+    config: Partial<LightAttributesDTO>,
+  ): Promise<AccessoryDTO | undefined>;
 }
